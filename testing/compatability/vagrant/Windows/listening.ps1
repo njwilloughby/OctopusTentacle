@@ -12,7 +12,7 @@ param ([string] $version,
 
 $hasSpaces = !$version.StartsWith("3.")
 $path = "C:\Program Files\Octopus Deploy\Tentacle$version"
-$ip = (Get-NetIPAddress -AddressFamily IPV4 -InterfaceAlias "Ethernet 2").IPAddress
+$hostname = $env:computername
 
 if($deploymentTarget){
     $typeName = "DeploymentTarget"
@@ -30,22 +30,22 @@ if($deploymentTarget)
 {
     if($hasSpaces)
     {
-        ."$path\Tentacle.exe" register-with --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --space $space --publicHostName $ip
+        ."$path\Tentacle.exe" register-with --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --space $space --publicHostName $hostname
     }
     else
     {
-        ."$path\Tentacle.exe" register-with --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --publicHostName $ip        
+        ."$path\Tentacle.exe" register-with --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --publicHostName $hostname        
     }
 }
 else
 {
     if($hasSpaces)
     {
-        ."$path\Tentacle.exe" register-worker --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --space $space --workerpool "$workerPool" --publicHostName $ip
+        ."$path\Tentacle.exe" register-worker --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --space $space --workerpool "$workerPool" --publicHostName $hostname
     }
     else
     {
-        ."$path\Tentacle.exe" register-worker --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --workerpool "$workerPool" --publicHostName $ip        
+        ."$path\Tentacle.exe" register-worker --instance "WindowsListening$typeName.$version" --server "$serverUrl" --name "WindowsListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --workerpool "$workerPool" --publicHostName $hostname        
     }
 }
 

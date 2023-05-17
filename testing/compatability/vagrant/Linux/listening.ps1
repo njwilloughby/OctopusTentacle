@@ -12,7 +12,7 @@ param ([string] $version,
 
 $hasSpaces = !$version.StartsWith("3.")
 $path = "/opt/octopus/tentacle$version"
-$ip = $(/sbin/ip -o -4 addr list enp0s8 | awk '{print $4}' | cut -d/ -f1)
+$hostname = hostname
 
 if($deploymentTarget){
     $typeName = "DeploymentTarget"
@@ -30,22 +30,22 @@ if($deploymentTarget)
 {
     if($hasSpaces)
     {
-        ."$path/Tentacle" register-with --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --space $space --publicHostName $ip
+        ."$path/Tentacle" register-with --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --space $space --publicHostName $hostname
     }
     else
     {
-        ."$path/Tentacle" register-with --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --publicHostName $ip        
+        ."$path/Tentacle" register-with --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --environment "$environment" --role "$roll" --publicHostName $hostname        
     }
 }
 else
 {
     if($hasSpaces)
     {
-        ."$path/Tentacle" register-worker --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --space $space --workerpool "$workerPool" --publicHostName $ip
+        ."$path/Tentacle" register-worker --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --space $space --workerpool "$workerPool" --publicHostName $hostname
     }
     else
     {
-        ."$path/Tentacle" register-worker --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --workerpool "$workerPool" --publicHostName $ip        
+        ."$path/Tentacle" register-worker --instance "LinuxListening$typeName.$version" --server "$serverUrl" --name "LinuxListening$typeName.$version" --comms-style "TentaclePassive" --tentacle-comms-port "$port" --force --apiKey "$serverApiKey" --workerpool "$workerPool" --publicHostName $hostname        
     }
 }
 
