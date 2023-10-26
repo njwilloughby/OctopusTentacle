@@ -13,6 +13,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
     {
         private readonly List<Decorator<IAsyncClientScriptService>> scriptServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientScriptServiceV2>> scriptServiceV2Decorator = new ();
+        private readonly List<Decorator<IAsyncClientScriptServiceV3Alpha>> scriptServiceV3AlphaDecorators = new ();
         private readonly List<Decorator<IAsyncClientFileTransferService>> fileTransferServiceDecorator = new ();
         private readonly List<Decorator<IAsyncClientCapabilitiesServiceV2>> capabilitiesServiceV2Decorator = new ();
 
@@ -25,6 +26,12 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
         public TentacleServiceDecoratorBuilder DecorateScriptServiceV2With(Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator)
         {
             this.scriptServiceV2Decorator.Add(scriptServiceV2Decorator);
+            return this;
+        }
+
+        public TentacleServiceDecoratorBuilder DecorateScriptServiceV3AlphaWith(Decorator<IAsyncClientScriptServiceV3Alpha> scriptServiceV3AlphaDecorator)
+        {
+            scriptServiceV3AlphaDecorators.Add(scriptServiceV3AlphaDecorator);
             return this;
         }
 
@@ -64,9 +71,14 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             return this;
         }
 
-        internal ITentacleServiceDecorator Build()
+        internal ITentacleServiceDecoratorFactory Build()
         {
-            return new FooTentacleServiceDecorator(Combine(scriptServiceDecorator), Combine(scriptServiceV2Decorator), Combine(fileTransferServiceDecorator), Combine(capabilitiesServiceV2Decorator));
+            return new FooTentacleServiceDecoratorFactory(
+                Combine(scriptServiceDecorator),
+                Combine(scriptServiceV2Decorator),
+                Combine(scriptServiceV3AlphaDecorators),
+                Combine(fileTransferServiceDecorator),
+                Combine(capabilitiesServiceV2Decorator));
         }
 
         public static Decorator<T> Combine<T>(List<Decorator<T>> chain) where T : class
@@ -86,14 +98,18 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             };
         }
 
-        private class FooTentacleServiceDecorator : AsyncToSyncTentacleServiceDecorator, ITentacleServiceDecorator
+        private class FooTentacleServiceDecoratorFactory : AsyncToSyncTentacleServiceDecorator, ITentacleServiceDecoratorFactory
         {
-            public FooTentacleServiceDecorator(Decorator<IAsyncClientScriptService> scriptServiceDecorator,
+            readonly Decorator<IAsyncClientScriptServiceV3Alpha> scriptServiceV3AlphaDecorator;
+
+            public FooTentacleServiceDecoratorFactory(Decorator<IAsyncClientScriptService> scriptServiceDecorator,
                 Decorator<IAsyncClientScriptServiceV2> scriptServiceV2Decorator,
+                Decorator<IAsyncClientScriptServiceV3Alpha> scriptServiceV3AlphaDecorator,
                 Decorator<IAsyncClientFileTransferService> fileTransferServiceDecorator,
-                Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator) : 
+                Decorator<IAsyncClientCapabilitiesServiceV2> capabilitiesServiceV2Decorator) :
                 base(scriptServiceDecorator, scriptServiceV2Decorator, fileTransferServiceDecorator, capabilitiesServiceV2Decorator)
             {
+                this.scriptServiceV3AlphaDecorator = scriptServiceV3AlphaDecorator;
             }
 
             public IAsyncClientScriptService Decorate(IAsyncClientScriptService scriptService)
@@ -104,6 +120,11 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators
             public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 scriptService)
             {
                 return scriptServiceV2Decorator(scriptService);
+            }
+
+            public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha scriptService)
+            {
+                return scriptServiceV3AlphaDecorator(scriptService);
             }
 
             public IAsyncClientFileTransferService Decorate(IAsyncClientFileTransferService service)

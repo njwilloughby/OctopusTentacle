@@ -8,7 +8,6 @@ using NUnit.Framework;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts.Capabilities;
 using Octopus.Tentacle.Tests.Integration.Support;
-using Octopus.Tentacle.Tests.Integration.Support.Legacy;
 using Octopus.Tentacle.Tests.Integration.Util.Builders;
 using Octopus.Tentacle.Tests.Integration.Util.Builders.Decorators;
 
@@ -23,7 +22,7 @@ namespace Octopus.Tentacle.Tests.Integration
         {
             SyncOrAsyncHalibut syncOrAsyncHalibut = tentacleConfigurationTestCase.SyncOrAsyncHalibut;
             Version? version = tentacleConfigurationTestCase.Version;
-            
+
             await using var clientAndTentacle = await tentacleConfigurationTestCase.CreateLegacyBuilder().Build(CancellationToken);
 
             var capabilities = await syncOrAsyncHalibut
@@ -72,7 +71,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b
                     .Print("Running..."))
                 .Build();

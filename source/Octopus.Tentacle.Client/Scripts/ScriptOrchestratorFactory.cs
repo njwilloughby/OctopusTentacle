@@ -11,6 +11,7 @@ using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Services;
 using Octopus.Tentacle.Client.Utils;
 using Octopus.Tentacle.Contracts.Capabilities;
+using Octopus.Tentacle.Contracts.ClientServices;
 using Octopus.Tentacle.Contracts.Observability;
 
 namespace Octopus.Tentacle.Client.Scripts
@@ -29,11 +30,13 @@ namespace Octopus.Tentacle.Client.Scripts
 
         readonly SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1;
         readonly SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2;
+        readonly IAsyncClientScriptServiceV3Alpha? clientScriptServiceV3Alpha;
         readonly SyncAndAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2;
 
         public ScriptOrchestratorFactory(
             SyncAndAsyncClientScriptServiceV1 clientScriptServiceV1,
             SyncAndAsyncClientScriptServiceV2 clientScriptServiceV2,
+            IAsyncClientScriptServiceV3Alpha? clientScriptServiceV3Alpha,
             SyncAndAsyncClientCapabilitiesServiceV2 clientCapabilitiesServiceV2,
             IScriptObserverBackoffStrategy scriptObserverBackOffStrategy,
             RpcCallExecutor rpcCallExecutor,
@@ -47,6 +50,7 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             this.clientScriptServiceV1 = clientScriptServiceV1;
             this.clientScriptServiceV2 = clientScriptServiceV2;
+            this.clientScriptServiceV3Alpha = clientScriptServiceV3Alpha;
             this.clientCapabilitiesServiceV2 = clientCapabilitiesServiceV2;
             this.scriptObserverBackOffStrategy = scriptObserverBackOffStrategy;
             this.rpcCallExecutor = rpcCallExecutor;
@@ -77,6 +81,19 @@ namespace Octopus.Tentacle.Client.Scripts
 
                 ScriptServiceVersion.Version2 => new ScriptServiceV2Orchestrator(
                     clientScriptServiceV2,
+                    scriptObserverBackOffStrategy,
+                    rpcCallExecutor,
+                    clientOperationMetricsBuilder,
+                    onScriptStatusResponseReceived,
+                    onScriptCompleted,
+                    onCancellationAbandonCompleteScriptAfter,
+                    rpcRetrySettings,
+                    asyncHalibutFeature,
+                    logger),
+
+                ScriptServiceVersion.Version3Alpha => new ScriptServiceV3AlphaOrchestrator(
+                    //we can be confident that if Version3Alpha is provided, that this service is not null
+                    clientScriptServiceV3Alpha!,
                     scriptObserverBackOffStrategy,
                     rpcCallExecutor,
                     clientOperationMetricsBuilder,
@@ -129,6 +146,23 @@ namespace Octopus.Tentacle.Client.Scripts
             }
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
+
+            if (tentacleCapabilities.HasScriptServiceV3Alpha())
+            {
+                //TODO: Remove when the async halibut feature is defaulted to on all the time
+                if (asyncHalibutFeature.IsDisabled() || clientScriptServiceV3Alpha is null)
+                {
+                    logger.Warn("Async Halibut is disabled, but Tentacle supports ScriptServiceV3Alpha. Async Halibut must be enabled to use this service.");
+                    logger.Warn("Falling back to ScriptServiceV2.");
+                    return ScriptServiceVersion.Version2;
+                }
+
+                logger.Verbose("Using ScriptServiceV3Alpha");
+                logger.Verbose(rpcRetrySettings.RetriesEnabled
+                    ? $"RPC call retries are enabled. Retry timeout {rpcCallExecutor.RetryTimeout.TotalSeconds} seconds"
+                    : "RPC call retries are disabled.");
+                return ScriptServiceVersion.Version3Alpha;
+            }
 
             if (tentacleCapabilities.HasScriptServiceV2())
             {

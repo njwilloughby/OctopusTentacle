@@ -38,7 +38,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var scriptHasStartFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "scripthasstarted");
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .CreateFile(scriptHasStartFile)
                     .WaitForFileToExist(waitForFile)
@@ -50,7 +50,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var inMemoryLog = new InMemoryLog();
 
             var execScriptTask = Task.Run(
-                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog), 
+                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog),
                 CancellationToken);
 
             // Wait for the script to start.
@@ -101,7 +101,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var waitForFile = Path.Combine(clientTentacle.TemporaryDirectory.DirectoryPath, "waitforme");
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .WaitForFileToExist(waitForFile)
@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var inMemoryLog = new InMemoryLog();
 
             var execScriptTask = Task.Run(
-                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog), 
+                async () => await clientTentacle.TentacleClient.ExecuteScript(startScriptCommand, CancellationToken, null, inMemoryLog),
                 CancellationToken);
 
             await Wait.For(() => scriptServiceV2Exceptions.GetStatusLatestException != null, CancellationToken);
@@ -163,7 +163,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 .Build(CancellationToken);
             portForwarder = clientTentacle.PortForwarder;
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(new ScriptBuilder().Print("hello").Sleep(TimeSpan.FromSeconds(1)))
                 .Build();
 
@@ -214,7 +214,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(new ScriptBuilder()
                     .Print("hello")
                     .CreateFile(scriptIsRunningFlag)
@@ -294,7 +294,7 @@ namespace Octopus.Tentacle.Tests.Integration
 
             var inMemoryLog = new InMemoryLog();
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(new ScriptBuilder().Print("hello"))
                 .Build();
 

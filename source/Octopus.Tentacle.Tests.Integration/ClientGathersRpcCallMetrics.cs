@@ -29,8 +29,8 @@ namespace Octopus.Tentacle.Tests.Integration
             await using var clientTentacle = await tentacleConfigurationTestCase.CreateBuilder()
                 .WithTentacleClientObserver(tentacleClientObserver)
                 .Build(CancellationToken);
-            
-            var startScriptCommand = new StartScriptCommandV2Builder()
+
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
 
@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration
             tentacleClientObserver.RpcCallMetrics.Should().ContainSingle(m => m.RpcCall.Name == nameof(IScriptServiceV2.CompleteScript) && m.RpcCall.Service == expectedScriptService);
             tentacleClientObserver.RpcCallMetrics.Should().AllSatisfy(m => m.Succeeded.Should().BeTrue());
         }
-        
+
         [Test]
         [TentacleConfigurations(testCommonVersions: true)]
         public async Task ExecuteScriptShouldGatherMetrics_WhenFails(TentacleConfigurationTestCase tentacleConfigurationTestCase)
@@ -68,7 +68,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     .Build())
                 .Build(CancellationToken);
 
-            var startScriptCommand = new StartScriptCommandV2Builder()
+            var startScriptCommand = new StartScriptCommandV3AlphaBuilder()
                 .WithScriptBody(b => b.Print("Hello"))
                 .Build();
 

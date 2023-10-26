@@ -3,7 +3,7 @@ using Octopus.Tentacle.Contracts.ClientServices;
 
 namespace Octopus.Tentacle.Client
 {
-    internal interface ITentacleServiceDecorator
+    internal interface ITentacleServiceDecoratorFactory
     {
         public IClientScriptService Decorate(IClientScriptService scriptService);
 
@@ -12,6 +12,7 @@ namespace Octopus.Tentacle.Client
         public IClientScriptServiceV2 Decorate(IClientScriptServiceV2 scriptService);
 
         public IAsyncClientScriptServiceV2 Decorate(IAsyncClientScriptServiceV2 scriptService);
+        public IAsyncClientScriptServiceV3Alpha Decorate(IAsyncClientScriptServiceV3Alpha scriptService);
 
         public IClientFileTransferService Decorate(IClientFileTransferService service);
 
