@@ -67,7 +67,8 @@ namespace Octopus.Tentacle.Services.Scripts
                         command.ScriptIsolationMutexTimeout,
                         command.IsolationMutexName,
                         command.Arguments,
-                        command.Files);
+                        command.Files,
+                        CancellationToken.None).Result;
 
                     runningScript.ScriptStateStore.Create();
                 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Halibut;
 using Octopus.Diagnostics;
 using Octopus.Tentacle.Configuration;
@@ -41,18 +42,17 @@ namespace Octopus.Tentacle.Services.FileTransfer
             using (fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
             {}
 
-#pragma warning disable CS0612
-            return new DataStream(fileSize, writer =>
+
+            return new DataStream(fileSize, async (writer, ct) =>
             {
                 log.Trace("Begin streaming file download: " + fullPath);
                 using (var stream = fileSystem.OpenFile(fullPath, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    stream.CopyTo(writer);
-                    writer.Flush();
+                    await stream.CopyToAsync(writer, 81920, ct);
+                    await writer.FlushAsync(ct);
                     log.Trace("Finished streaming file download: " + fullPath);
                 }
             });
-#pragma warning restore CS0612
         }
 
         public UploadResult UploadFile(string remotePath, DataStream upload)
@@ -71,9 +71,7 @@ namespace Octopus.Tentacle.Services.FileTransfer
             fileSystem.EnsureDiskHasEnoughFreeSpace(parentDirectory, upload.Length);
 
             log.Trace("Copying uploaded data stream to: " + fullPath);
-#pragma warning disable CS0612
-            upload.Receiver().SaveTo(fullPath);
-#pragma warning restore CS0612
+            upload.Receiver().SaveToAsync(fullPath, CancellationToken.None).Wait();
             return new UploadResult(fullPath, HashFile(fullPath), fileSystem.GetFileSize(fullPath));
         }
 
