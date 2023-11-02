@@ -20,14 +20,14 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             ServerThumbprint = serverThumbprint;
         }
 
-        internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken)
+        internal async Task<RunningTentacle> Build(ILogger log, CancellationToken cancellationToken, string? customInstanceName = null)
         {
-            var instanceName = InstanceNameGenerator();
+            var instanceName = customInstanceName ?? InstanceNameGenerator();
             var configFilePath = Path.Combine(HomeDirectory.DirectoryPath, instanceName + ".cfg");
             var tentacleExe = TentacleExePath ?? TentacleExeFinder.FindTentacleExe();
             var subscriptionId = PollingSubscriptionId.Generate();
             
-            var logger = log.ForContext<ListeningTentacleBuilder>();
+            var logger = log.ForContext<PollingTentacleBuilder>();
             logger.Information($"Tentacle.exe location: {tentacleExe}");
 
             await CreateInstance(tentacleExe, configFilePath, instanceName, HomeDirectory, cancellationToken);

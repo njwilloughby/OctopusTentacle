@@ -33,6 +33,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
         ITentacleClientObserver tentacleClientObserver = new NoTentacleClientObserver();
         AsyncHalibutFeature asyncHalibutFeature = AsyncHalibutFeature.Disabled;
         Action<ITentacleBuilder>? tentacleBuilderAction;
+        string? instanceName;
 
         public ClientAndTentacleBuilder(TentacleType tentacleType)
         {
@@ -129,6 +130,12 @@ namespace Octopus.Tentacle.Tests.Integration.Support
             this.tentacleBuilderAction = tentacleBuilderAction;
             return this;
         }
+        
+        public ClientAndTentacleBuilder WithInstanceName(string customInstanceName)
+        {
+            instanceName = customInstanceName;
+            return this;
+        }
 
         PortForwarder? BuildPortForwarder(int localPort, int? listeningPort)
         {
@@ -188,7 +195,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 tentacleBuilderAction?.Invoke(pollingTentacleBuilder);
 
-                runningTentacle = await pollingTentacleBuilder.Build(logger, cancellationToken);
+                runningTentacle = await pollingTentacleBuilder.Build(logger, cancellationToken, instanceName);
 
 #pragma warning disable CS0612
                 tentacleEndPoint = new ServiceEndPoint(runningTentacle.ServiceUri, runningTentacle.Thumbprint);
@@ -201,7 +208,7 @@ namespace Octopus.Tentacle.Tests.Integration.Support
 
                 tentacleBuilderAction?.Invoke(listeningTentacleBuilder);
 
-                runningTentacle = await listeningTentacleBuilder.Build(logger, cancellationToken);
+                runningTentacle = await listeningTentacleBuilder.Build(logger, cancellationToken, instanceName);
 
                 portForwarder = BuildPortForwarder(runningTentacle.ServiceUri.Port, null);
 
