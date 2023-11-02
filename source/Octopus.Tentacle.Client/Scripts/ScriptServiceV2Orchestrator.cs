@@ -65,7 +65,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     ++startScriptCallCount;
 
-                    var result = await clientScriptServiceV2.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                    var result = await clientScriptServiceV2.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, TBC));
 
                     return result;
                 }
@@ -80,7 +80,6 @@ namespace Octopus.Tentacle.Client.Scripts
                         // If we manage to cancel the start script call we can walk away
                         // If we do abandon the start script call we have to assume the script is running so need
                         // to call CancelScript and CompleteScript
-                        abandonActionOnCancellation: true,
                         clientOperationMetricsBuilder,
                         scriptExecutionCancellationToken).ConfigureAwait(false);
                 }
@@ -90,7 +89,6 @@ namespace Octopus.Tentacle.Client.Scripts
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.StartScript)),
                         StartScriptAction,
                         logger,
-                        abandonActionOnCancellation: true,
                         clientOperationMetricsBuilder,
                         scriptExecutionCancellationToken).ConfigureAwait(false);
                 }
@@ -129,7 +127,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     var request = new ScriptStatusRequestV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
 
-                    var result = await clientScriptServiceV2.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                    var result = await clientScriptServiceV2.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, TBC));
 
                     return result;
                 }
@@ -140,8 +138,6 @@ namespace Octopus.Tentacle.Client.Scripts
                         RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
                         GetStatusAction,
                         logger,
-                        // If cancelling script execution we can abandon a call to GetStatus and go straight into the CancelScript and CompleteScript flow
-                        abandonActionOnCancellation: true,
                         clientOperationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
                 }
@@ -150,7 +146,6 @@ namespace Octopus.Tentacle.Client.Scripts
                     RpcCall.Create<IScriptServiceV2>(nameof(IScriptServiceV2.GetStatus)),
                     GetStatusAction,
                     logger,
-                    abandonActionOnCancellation: true,
                     clientOperationMetricsBuilder,
                     cancellationToken).ConfigureAwait(false);
             }
@@ -167,7 +162,7 @@ namespace Octopus.Tentacle.Client.Scripts
             {
                 var request = new CancelScriptCommandV2(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
 
-                var result = await clientScriptServiceV2.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                var result = await clientScriptServiceV2.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, TBC));
 
                 return result;
             }
@@ -204,13 +199,12 @@ namespace Octopus.Tentacle.Client.Scripts
                         async ct =>
                         {
                             var request = new CompleteScriptCommandV2(lastStatusResponse.Ticket);
-
-                            await clientScriptServiceV2.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                            
+                            await clientScriptServiceV2.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, TBC)); // Wait a period of time before cancelling an in progress call
                         },
                         logger,
-                        abandonActionOnCancellation: false,
                         clientOperationMetricsBuilder,
-                        CancellationToken.None);
+                        TBC); // Wait a period of time before cancelling an in progress call
 
                 var actionTaskCompletionResult = await actionTask.WaitTillCompletion(onCancellationAbandonCompleteScriptAfter, scriptExecutionCancellationToken);
                 if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)

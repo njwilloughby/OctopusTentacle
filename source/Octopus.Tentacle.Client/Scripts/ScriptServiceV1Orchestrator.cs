@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 RpcCall.Create<IScriptService>(nameof(IScriptService.StartScript)),
                 async ct =>
                 {
-                    var result = await clientScriptServiceV1.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                    var result = await clientScriptServiceV1.StartScriptAsync(command, new HalibutProxyRequestOptions(ct, TBC));
 
                     return result;
                 },
@@ -91,7 +91,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     var request = new ScriptStatusRequest(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
 
-                    var result = await clientScriptServiceV1.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                    var result = await clientScriptServiceV1.GetStatusAsync(request, new HalibutProxyRequestOptions(ct, TBC));
 
                     return result;
                 },
@@ -111,7 +111,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     var request = new CancelScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
 
-                    var result = await clientScriptServiceV1.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                    var result = await clientScriptServiceV1.CancelScriptAsync(request, new HalibutProxyRequestOptions(ct, TBC));
 
                     return result;
                 },
@@ -131,7 +131,7 @@ namespace Octopus.Tentacle.Client.Scripts
                 {
                     var request = new CompleteScriptCommand(lastStatusResponse.Ticket, lastStatusResponse.NextLogSequence);
 
-                    var result = await clientScriptServiceV1.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, CancellationToken.None));
+                    var result = await clientScriptServiceV1.CompleteScriptAsync(request, new HalibutProxyRequestOptions(ct, TBC));
 
                     return result;
                 },

@@ -103,13 +103,10 @@ namespace Octopus.Tentacle.Client
 
             async Task<UploadResult> UploadFileAction(CancellationToken ct)
             {
-                await Task.CompletedTask.ConfigureAwait(false);
-
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
-
-                var result = await clientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct, CancellationToken.None));
-
+                var result = await clientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct, TBC));
                 logger.Info("Upload complete");
+
                 return result;
             }
 
@@ -121,7 +118,6 @@ namespace Octopus.Tentacle.Client
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
                         UploadFileAction,
                         logger,
-                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
                 }
@@ -131,7 +127,6 @@ namespace Octopus.Tentacle.Client
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
                         UploadFileAction,
                         logger,
-                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
                 }
@@ -154,13 +149,10 @@ namespace Octopus.Tentacle.Client
 
             async Task<DataStream> DownloadFileAction(CancellationToken ct)
             {
-                await Task.CompletedTask.ConfigureAwait(false);
-
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-
-                var result = await clientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, CancellationToken.None));
-
+                var result = await clientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, TBC));
                 logger.Info("Download complete");
+
                 return result;
             }
 
@@ -172,7 +164,6 @@ namespace Octopus.Tentacle.Client
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
                         DownloadFileAction,
                         logger,
-                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
                 }
@@ -182,7 +173,6 @@ namespace Octopus.Tentacle.Client
                         RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
                         DownloadFileAction,
                         logger,
-                        abandonActionOnCancellation: false,
                         operationMetricsBuilder,
                         cancellationToken).ConfigureAwait(false);
                 }

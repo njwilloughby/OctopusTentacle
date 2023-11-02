@@ -23,11 +23,8 @@ namespace Octopus.Tentacle.Client.Retries
 
         public delegate Task OnTimeoutAction(TimeSpan retryTimeout, TimeSpan elapsedDuration, int retryCount, CancellationToken cancellationToken);
 
-        readonly TimeoutStrategy timeoutStrategy;
-
-        public RpcCallRetryHandler(TimeSpan retryTimeout, TimeoutStrategy timeoutStrategy)
+        public RpcCallRetryHandler(TimeSpan retryTimeout)
         {
-            this.timeoutStrategy = timeoutStrategy;
             RetryTimeout = retryTimeout;
         }
 
@@ -75,7 +72,7 @@ namespace Octopus.Tentacle.Client.Retries
             }
 
             var policyBuilder = new RpcCallRetryPolicyBuilder()
-                .WithRetryTimeout(RetryTimeout, timeoutStrategy)
+                .WithRetryTimeout(RetryTimeout)
                 .WithOnRetryAction(OnRetryAction)
                 .WithOnTimeoutAction(OnTimeoutAction);
 
@@ -102,7 +99,7 @@ namespace Octopus.Tentacle.Client.Retries
 
                 var timeoutPolicy = policyBuilder
                     // Ensure the remaining retry time excludes the elapsed time
-                    .WithRetryTimeout(remainingRetryDuration, timeoutStrategy)
+                    .WithRetryTimeout(remainingRetryDuration)
                     .BuildTimeoutPolicy();
 
                 return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
@@ -127,37 +124,6 @@ namespace Octopus.Tentacle.Client.Retries
             {
                 return remainingRetryDuration > RetryIfRemainingDurationAtLeast;
             }
-        }
-
-        public async Task<T> ExecuteWithRetries<T>(
-            Func<CancellationToken, Task<T>> action,
-            OnRetyAction? onRetryAction,
-            OnTimeoutAction? onTimeoutAction,
-            bool abandonActionOnCancellation,
-            TimeSpan abandonAfter,
-            CancellationToken cancellationToken)
-        {
-            return await ExecuteWithRetries(
-                async ct =>
-                {
-                    if (!abandonActionOnCancellation)
-                    {
-                        return await action(ct).ConfigureAwait(false);
-                    }
-
-                    var actionTask = action(ct);
-
-                    var actionTaskCompletionResult = await actionTask.WaitTillCompletion(abandonAfter, cancellationToken);
-                    if (actionTaskCompletionResult == TaskCompletionResult.Abandoned)
-                    {
-                        throw new OperationAbandonedException(abandonAfter);
-                    }
-
-                    return await actionTask.ConfigureAwait(false);
-                },
-                onRetryAction,
-                onTimeoutAction,
-                cancellationToken);
         }
     }
 }

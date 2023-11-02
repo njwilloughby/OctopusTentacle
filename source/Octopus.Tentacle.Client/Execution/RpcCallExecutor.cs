@@ -10,12 +10,11 @@ namespace Octopus.Tentacle.Client.Execution
 {
     internal class RpcCallExecutor
     {
-        private static readonly TimeSpan AbandonAfter = TimeSpan.FromSeconds(5);
         public TimeSpan RetryTimeout => rpcCallRetryHandler.RetryTimeout;
 
-        private readonly RpcCallRetryHandler rpcCallRetryHandler;
-        private readonly RpcCallNoRetriesHandler rpcCallNoRetriesHandler;
-        private readonly ITentacleClientObserver tentacleClientObserver;
+        readonly RpcCallRetryHandler rpcCallRetryHandler;
+        readonly RpcCallNoRetriesHandler rpcCallNoRetriesHandler;
+        readonly ITentacleClientObserver tentacleClientObserver;
 
         internal RpcCallExecutor(
             RpcCallRetryHandler rpcCallRetryHandler,
@@ -31,7 +30,6 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
             ILog logger,
-            bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
@@ -80,8 +78,6 @@ namespace Octopus.Tentacle.Client.Execution
                                 logger.Info($"Could not communicate with Tentacle after {(int)elapsedDuration.TotalSeconds} seconds.");
                             }
                         },
-                        abandonActionOnCancellation,
-                        AbandonAfter,
                         cancellationToken)
                     .ConfigureAwait(false);
                 return response;
@@ -103,7 +99,6 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
             ILog logger,
-            bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
@@ -136,8 +131,6 @@ namespace Octopus.Tentacle.Client.Execution
                             }
                         }, ct);
                     },
-                    abandonActionOnCancellation,
-                    AbandonAfter,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -147,7 +140,6 @@ namespace Octopus.Tentacle.Client.Execution
             RpcCall rpcCall,
             Func<CancellationToken, Task> action,
             ILog logger,
-            bool abandonActionOnCancellation,
             ClientOperationMetricsBuilder clientOperationMetricsBuilder,
             CancellationToken cancellationToken)
         {
@@ -179,8 +171,6 @@ namespace Octopus.Tentacle.Client.Execution
                             }
                         }, ct);
                     },
-                    abandonActionOnCancellation,
-                    AbandonAfter,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
