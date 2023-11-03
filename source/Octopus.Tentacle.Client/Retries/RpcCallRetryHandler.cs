@@ -56,7 +56,7 @@ namespace Octopus.Tentacle.Client.Retries
 
                     if (onRetryAction != null)
                     {
-                        await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, elapsedDuration, cancellationToken).ConfigureAwait(false);
+                        await onRetryAction.Invoke(exception, sleepDuration, retryCount, RetryTimeout, elapsedDuration, cancellationToken);
                     }
                 }
             }
@@ -67,7 +67,7 @@ namespace Octopus.Tentacle.Client.Retries
 
                 if (onTimeoutAction != null)
                 {
-                    await onTimeoutAction.Invoke(RetryTimeout, elapsedDuration, totalRetryCount, cancellationToken).ConfigureAwait(false);
+                    await onTimeoutAction.Invoke(RetryTimeout, elapsedDuration, totalRetryCount, cancellationToken);
                 }
             }
 
@@ -85,7 +85,7 @@ namespace Octopus.Tentacle.Client.Retries
                 if (isInitialAction)
                 {
                     isInitialAction = false;
-                    return await action(ct).ConfigureAwait(false);
+                    return await action(ct);
                 }
 
                 var remainingRetryDuration = RetryTimeout - started.Elapsed - nextSleepDuration;
@@ -93,7 +93,7 @@ namespace Octopus.Tentacle.Client.Retries
                 if (!ShouldRetryWithRemainingDuration(remainingRetryDuration))
                 {
                     // We are short circuiting as the retry duration has elapsed
-                    await OnTimeoutAction(null, RetryTimeout, null, null).ConfigureAwait(false);
+                    await OnTimeoutAction(null, RetryTimeout, null, null);
                     throw new TimeoutRejectedException("The delegate executed asynchronously through TimeoutPolicy did not complete within the timeout.");
                 }
 
@@ -102,13 +102,13 @@ namespace Octopus.Tentacle.Client.Retries
                     .WithRetryTimeout(remainingRetryDuration)
                     .BuildTimeoutPolicy();
 
-                return await timeoutPolicy.ExecuteAsync(action, ct).ConfigureAwait(false);
+                return await timeoutPolicy.ExecuteAsync(action, ct);
             }
 
             try
             {
                 started.Start();
-                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken).ConfigureAwait(false);
+                return await retryPolicy.ExecuteAsync(ExecuteAction, cancellationToken);
             }
             catch (TimeoutRejectedException)
             {

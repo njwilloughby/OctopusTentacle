@@ -116,7 +116,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             "This results in an error being returned rather than an operation cancelled being returned and is not testing the intended scenario");
                     }
 
-                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
+                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException();
                     break;
                 case RpcCallStage.InFlight:
                     capabilityServiceV2Exceptions.GetCapabilitiesLatestException?.Should().BeOfType<HalibutClientException>();
@@ -251,7 +251,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             "This results in an error being returned rather than an operation cancelled being returned and is not testing the intended scenario");
                     }
 
-                    scriptServiceV2Exceptions.StartScriptLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
+                    scriptServiceV2Exceptions.StartScriptLatestException.Should().BeTaskOrOperationCancelledException();
                     break;
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2Exceptions.StartScriptLatestException?.Should().BeOfType<HalibutClientException>();
@@ -402,7 +402,7 @@ namespace Octopus.Tentacle.Tests.Integration
                             "This results in an error being returned rather than an operation cancelled being returned and is not testing the intended scenario");
                     }
 
-                    scriptServiceV2Exceptions.GetStatusLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
+                    scriptServiceV2Exceptions.GetStatusLatestException.Should().BeTaskOrOperationCancelledException();
                     break;
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2Exceptions.GetStatusLatestException?.Should().BeOfType<HalibutClientException>();

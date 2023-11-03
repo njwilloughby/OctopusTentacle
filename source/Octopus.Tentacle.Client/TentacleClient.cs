@@ -104,7 +104,7 @@ namespace Octopus.Tentacle.Client
             async Task<UploadResult> UploadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning upload of {fileName} to Tentacle");
-                var result = await clientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct, TBC));
+                var result = await clientFileTransferServiceV1.UploadFileAsync(path, package, new HalibutProxyRequestOptions(ct, ct));
                 logger.Info("Upload complete");
 
                 return result;
@@ -112,24 +112,13 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (clientOptions.RpcRetrySettings.RetriesEnabled)
-                {
-                    return await rpcCallExecutor.ExecuteWithRetries(
-                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
-                        UploadFileAction,
-                        logger,
-                        operationMetricsBuilder,
-                        cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    return await rpcCallExecutor.ExecuteWithNoRetries(
-                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
-                        UploadFileAction,
-                        logger,
-                        operationMetricsBuilder,
-                        cancellationToken).ConfigureAwait(false);
-                }
+                return await rpcCallExecutor.Execute(
+                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.UploadFile)),
+                    UploadFileAction,
+                    logger,
+                    operationMetricsBuilder,
+                    cancellationToken);
             }
             catch (Exception e)
             {
@@ -150,7 +139,7 @@ namespace Octopus.Tentacle.Client
             async Task<DataStream> DownloadFileAction(CancellationToken ct)
             {
                 logger.Info($"Beginning download of {Path.GetFileName(remotePath)} from Tentacle");
-                var result = await clientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, TBC));
+                var result = await clientFileTransferServiceV1.DownloadFileAsync(remotePath, new HalibutProxyRequestOptions(ct, ct));
                 logger.Info("Download complete");
 
                 return result;
@@ -158,24 +147,13 @@ namespace Octopus.Tentacle.Client
 
             try
             {
-                if (clientOptions.RpcRetrySettings.RetriesEnabled)
-                {
-                    return await rpcCallExecutor.ExecuteWithRetries(
-                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
-                        DownloadFileAction,
-                        logger,
-                        operationMetricsBuilder,
-                        cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    return await rpcCallExecutor.ExecuteWithNoRetries(
-                        RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
-                        DownloadFileAction,
-                        logger,
-                        operationMetricsBuilder,
-                        cancellationToken).ConfigureAwait(false);
-                }
+                return await rpcCallExecutor.Execute(
+                    retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                    RpcCall.Create<IFileTransferService>(nameof(IFileTransferService.DownloadFile)),
+                    DownloadFileAction,
+                    logger,
+                    operationMetricsBuilder,
+                    cancellationToken);
             }
             catch (Exception e)
             {

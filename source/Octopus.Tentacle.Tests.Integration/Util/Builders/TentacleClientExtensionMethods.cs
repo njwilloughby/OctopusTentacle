@@ -36,7 +36,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                 },
                 cts => Task.CompletedTask,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(log),
-                token).ConfigureAwait(false);
+                token);
             return (finalResponse, logs);
         }
 
@@ -51,7 +51,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
                 remotePath,
                 upload,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(log),
-                token).ConfigureAwait(false);
+                token);
 
             return result;
         }
@@ -64,7 +64,7 @@ namespace Octopus.Tentacle.Tests.Integration.Util.Builders
         {
             var result = await tentacleClient.DownloadFile(remotePath,
                 new SerilogLoggerBuilder().Build().ForContext<TentacleClient>().ToILog().Chain(log),
-                token).ConfigureAwait(false);
+                token);
 
             return result;
         }

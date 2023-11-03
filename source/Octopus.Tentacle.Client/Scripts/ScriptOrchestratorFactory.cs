@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut.ServiceModel;
@@ -89,33 +88,20 @@ namespace Octopus.Tentacle.Client.Scripts
         {
             logger.Verbose("Determining ScriptService version to use");
 
-            CapabilitiesResponseV2 tentacleCapabilities;
-
             async Task<CapabilitiesResponseV2> GetCapabilitiesFunc(CancellationToken ct)
             {
-                var result = await clientCapabilitiesServiceV2.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct, TBC));
+                var result = await clientCapabilitiesServiceV2.GetCapabilitiesAsync(new HalibutProxyRequestOptions(ct, ct));
 
                 return result;
             }
 
-            if (clientOptions.RpcRetrySettings.RetriesEnabled)
-            {
-                tentacleCapabilities = await rpcCallExecutor.ExecuteWithRetries(
-                    RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
-                    GetCapabilitiesFunc,
-                    logger,
-                    clientOperationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                tentacleCapabilities = await rpcCallExecutor.ExecuteWithNoRetries(
-                    RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
-                    GetCapabilitiesFunc,
-                    logger,
-                    clientOperationMetricsBuilder,
-                    cancellationToken).ConfigureAwait(false);
-            }
+            var tentacleCapabilities = await rpcCallExecutor.Execute(
+                retriesEnabled: clientOptions.RpcRetrySettings.RetriesEnabled,
+                RpcCall.Create<ICapabilitiesServiceV2>(nameof(ICapabilitiesServiceV2.GetCapabilities)),
+                GetCapabilitiesFunc,
+                logger,
+                clientOperationMetricsBuilder,
+                cancellationToken);
 
             logger.Verbose($"Discovered Tentacle capabilities: {string.Join(",", tentacleCapabilities.SupportedCapabilities)}");
 

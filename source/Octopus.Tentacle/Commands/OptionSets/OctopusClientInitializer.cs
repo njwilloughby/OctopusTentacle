@@ -26,7 +26,7 @@ namespace Octopus.Tentacle.Commands.OptionSets
                 var clientOptions = new OctopusClientOptions { AllowDefaultProxy = useDefaultProxy};
 #endif
 
-                client = await OctopusAsyncClient.Create(endpoint, clientOptions).ConfigureAwait(false);
+                client = await OctopusAsyncClient.Create(endpoint, clientOptions);
 
                 if (string.IsNullOrWhiteSpace(apiEndpointOptions.ApiKey) &&
                     string.IsNullOrWhiteSpace(apiEndpointOptions.BearerToken))

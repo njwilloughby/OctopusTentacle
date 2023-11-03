@@ -26,6 +26,19 @@ namespace Octopus.Tentacle.Client.Execution
             this.tentacleClientObserver = tentacleClientObserver;
         }
 
+        public async Task<T> Execute<T>(
+            bool retriesEnabled,
+            RpcCall rpcCall,
+            Func<CancellationToken, Task<T>> action,
+            ILog logger,
+            ClientOperationMetricsBuilder clientOperationMetricsBuilder,
+            CancellationToken cancellationToken)
+        {
+            return retriesEnabled
+                ? await ExecuteWithRetries(rpcCall, action, logger, clientOperationMetricsBuilder, cancellationToken)
+                : await ExecuteWithNoRetries(rpcCall, action, logger, clientOperationMetricsBuilder, cancellationToken);
+        }
+
         public async Task<T> ExecuteWithRetries<T>(
             RpcCall rpcCall,
             Func<CancellationToken, Task<T>> action,
@@ -46,7 +59,7 @@ namespace Octopus.Tentacle.Client.Execution
                             {
                                 // Wrap the action in a task so it doesn't block on sync Halibut calls, and cancellation token is respected.
                                 var actionTask = Task.Run(async () => await action(ct), ct);
-                                var response = await actionTask.ConfigureAwait(false);
+                                var response = await actionTask;
 
                                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                                 return response;
@@ -79,7 +92,7 @@ namespace Octopus.Tentacle.Client.Execution
                             }
                         },
                         cancellationToken)
-                    .ConfigureAwait(false);
+                    ;
                 return response;
             }
             catch (Exception e)
@@ -113,7 +126,7 @@ namespace Octopus.Tentacle.Client.Execution
 
                             try
                             {
-                                var response = await action(ct).ConfigureAwait(false);
+                                var response = await action(ct);
                                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                                 return response;
                             }
@@ -132,7 +145,7 @@ namespace Octopus.Tentacle.Client.Execution
                         }, ct);
                     },
                     cancellationToken)
-                .ConfigureAwait(false);
+                ;
         }
 
 
@@ -154,7 +167,7 @@ namespace Octopus.Tentacle.Client.Execution
 
                             try
                             {
-                                await action(ct).ConfigureAwait(false);
+                                await action(ct);
                                 rpcCallMetricsBuilder.WithAttempt(TimedOperation.Success(start));
                             }
                             catch (Exception e)
@@ -172,7 +185,7 @@ namespace Octopus.Tentacle.Client.Execution
                         }, ct);
                     },
                     cancellationToken)
-                .ConfigureAwait(false);
+                ;
         }
     }
 }

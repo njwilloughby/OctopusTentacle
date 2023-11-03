@@ -302,7 +302,6 @@ namespace Octopus.Tentacle.Tests.Client
                 new RpcCall(RpcService, RpcCallName),
                 action,
                 Substitute.For<ILog>(),
-                false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -320,7 +319,6 @@ namespace Octopus.Tentacle.Tests.Client
                 new RpcCall(RpcService, RpcCallName),
                 action,
                 Substitute.For<ILog>(),
-                abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }
@@ -342,7 +340,6 @@ namespace Octopus.Tentacle.Tests.Client
                     return true;
                 },
                 Substitute.For<ILog>(),
-                abandonActionOnCancellation: false,
                 clientOperationMetricsBuilder,
                 cancellationToken);
         }

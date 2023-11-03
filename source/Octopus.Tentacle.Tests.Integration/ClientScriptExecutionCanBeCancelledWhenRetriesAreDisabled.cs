@@ -98,7 +98,7 @@ namespace Octopus.Tentacle.Tests.Integration
             switch (rpcCallStage)
             {
                 case RpcCallStage.Connecting:
-                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
+                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException();
                     break;
                 case RpcCallStage.InFlight:
                     capabilityServiceV2Exceptions.GetCapabilitiesLatestException?.Should().BeOfType<HalibutClientException>();
@@ -213,7 +213,7 @@ namespace Octopus.Tentacle.Tests.Integration
             switch (expectedFlow)
             {
                 case ExpectedFlow.CancelRpcAndExitImmediately:
-                    scriptServiceV2Exceptions.StartScriptLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
+                    scriptServiceV2Exceptions.StartScriptLatestException.Should().BeTaskOrOperationCancelledException();
                     break;
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2Exceptions.StartScriptLatestException?.Should().BeOfType<HalibutClientException>();
@@ -336,7 +336,7 @@ namespace Octopus.Tentacle.Tests.Integration
             switch (expectedFlow)
             {
                 case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
-                    scriptServiceV2Exceptions.GetStatusLatestException.Should().BeTaskOrOperationCancelledException().And.NotBeOfType<OperationAbandonedException>();
+                    scriptServiceV2Exceptions.GetStatusLatestException.Should().BeTaskOrOperationCancelledException();
                     break;
                 case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2Exceptions.GetStatusLatestException?.Should().BeOfType<HalibutClientException>();

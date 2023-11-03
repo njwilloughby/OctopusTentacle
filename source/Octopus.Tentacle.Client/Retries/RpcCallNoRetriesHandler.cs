@@ -10,14 +10,14 @@ namespace Octopus.Tentacle.Client.Retries
             Func<CancellationToken, Task> action,
             CancellationToken cancellationToken)
         {
-            await action(cancellationToken).ConfigureAwait(false);
+            await action(cancellationToken);
         }
 
         public async Task<T> ExecuteWithNoRetries<T>(
             Func<CancellationToken, Task<T>> action,
             CancellationToken cancellationToken)
         {
-            return await action(cancellationToken).ConfigureAwait(false);
+            return await action(cancellationToken);
         }
     }
 }
