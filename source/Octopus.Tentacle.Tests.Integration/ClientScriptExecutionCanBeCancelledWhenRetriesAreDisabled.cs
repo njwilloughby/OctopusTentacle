@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Halibut;
 using NUnit.Framework;
-using Octopus.Tentacle.Client.Retries;
 using Octopus.Tentacle.Client.Scripts;
 using Octopus.Tentacle.CommonTestUtils.Builders;
 using Octopus.Tentacle.Contracts;
@@ -95,16 +94,8 @@ namespace Octopus.Tentacle.Tests.Integration
             actualException.Should().BeTaskOrOperationCancelledException();
 
             // If the rpc call could be cancelled then the correct error was recorded
-            switch (rpcCallStage)
-            {
-                case RpcCallStage.Connecting:
-                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException();
-                    break;
-                case RpcCallStage.InFlight:
-                    capabilityServiceV2Exceptions.GetCapabilitiesLatestException?.Should().BeOfType<HalibutClientException>();
-                    break;
-            }
-
+            capabilityServiceV2Exceptions.GetCapabilitiesLatestException.Should().BeTaskOrOperationCancelledException();
+            
             // If the rpc call could be cancelled we cancelled quickly
             if (rpcCallStage == RpcCallStage.Connecting)
             {
@@ -128,7 +119,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var expectedFlow = rpcCallStage switch
             {
                 RpcCallStage.Connecting => ExpectedFlow.CancelRpcAndExitImmediately,
-                RpcCallStage.InFlight => ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript,
+                RpcCallStage.InFlight => ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript,
                 _ => throw new ArgumentOutOfRangeException()
             };
             
@@ -215,7 +206,7 @@ namespace Octopus.Tentacle.Tests.Integration
                 case ExpectedFlow.CancelRpcAndExitImmediately:
                     scriptServiceV2Exceptions.StartScriptLatestException.Should().BeTaskOrOperationCancelledException();
                     break;
-                case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
+                case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2Exceptions.StartScriptLatestException?.Should().BeOfType<HalibutClientException>();
                     break;
                 default:
@@ -236,7 +227,7 @@ namespace Octopus.Tentacle.Tests.Integration
                     scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().Be(0);
                     scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(0);
                     break;
-                case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
+                case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2CallCounts.CancelScriptCallCountStarted.Should().BeGreaterOrEqualTo(1);
                     scriptServiceV2CallCounts.CompleteScriptCallCountStarted.Should().Be(1);
                     break;
@@ -253,7 +244,7 @@ namespace Octopus.Tentacle.Tests.Integration
             var expectedFlow = rpcCallStage switch
             {
                 RpcCallStage.Connecting => ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript,
-                RpcCallStage.InFlight => ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript,
+                RpcCallStage.InFlight => ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript,
                 _ => throw new ArgumentOutOfRangeException()
             };
             var rpcCallHasStarted = new Reference<bool>(false);
@@ -337,9 +328,6 @@ namespace Octopus.Tentacle.Tests.Integration
             {
                 case ExpectedFlow.CancelRpcThenCancelScriptThenCompleteScript:
                     scriptServiceV2Exceptions.GetStatusLatestException.Should().BeTaskOrOperationCancelledException();
-                    break;
-                case ExpectedFlow.AbandonRpcThenCancelScriptThenCompleteScript:
-                    scriptServiceV2Exceptions.GetStatusLatestException?.Should().BeOfType<HalibutClientException>();
                     break;
                 default:
                     throw new NotSupportedException();
@@ -503,8 +491,7 @@ namespace Octopus.Tentacle.Tests.Integration
         public enum ExpectedFlow
         {
             CancelRpcAndExitImmediately,
-            CancelRpcThenCancelScriptThenCompleteScript,
-            AbandonRpcThenCancelScriptThenCompleteScript
+            CancelRpcThenCancelScriptThenCompleteScript
         }
     }
 }

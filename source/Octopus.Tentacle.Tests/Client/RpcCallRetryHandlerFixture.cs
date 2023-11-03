@@ -417,51 +417,6 @@ namespace Octopus.Tentacle.Tests.Client
             callCount.Should().Be(2);
         }
 
-        [TestCase(TimeoutStrategy.Pessimistic)]
-        public async Task CancelsTheExecutingActionIfItIsARetryAfterTheTimeoutEvenIfActionIgnoresCancellation()
-        {
-            var callCount = 0;
-
-            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(10));
-
-            var stopWatch = new Stopwatch();
-
-            try
-            {
-                await handler.ExecuteWithRetries(
-                    async ct =>
-                    {
-                        if (!stopWatch.IsRunning)
-                        {
-                            stopWatch.Start();
-                        }
-
-                        var wontCancelCancellationToken = new CancellationTokenSource().Token;
-
-                        callCount++;
-                        if (callCount == 1)
-                        {
-                            throw new HalibutClientException("An error has occurred.");
-                        }
-
-                        await Task.Delay(TimeSpan.FromSeconds(60), wontCancelCancellationToken);
-
-                        return Guid.NewGuid();
-                    },
-                    onRetryAction: null,
-                    onTimeoutAction: async (_, _, _, _) =>
-                    {
-                        await Task.CompletedTask;
-                        stopWatch.Stop();
-                    },
-                    CancellationToken.None);
-            }
-            catch (HalibutClientException) { }
-
-            stopWatch.Elapsed.Should().BeGreaterOrEqualTo(GetMinTimeoutDuration(handler)).And.BeLessThan(TimeSpan.FromSeconds(20));
-            callCount.Should().Be(2);
-        }
-
         [Test]
         public async Task ThrowsTheLastExceptionWhenHasRetriedAndTimesOut()
         {
@@ -653,8 +608,8 @@ namespace Octopus.Tentacle.Tests.Client
             timeoutTimes[0].RetryCount.Should().Be(0);
             onRetryActionCount.Should().Be(0);
         }
-
-        [TestCase(TimeoutStrategy.Optimistic)]
+        
+        [Test]
         public async Task ShouldWaitBetweenRetries()
         {
             var sleepDurations = new List<TimeSpan>();
@@ -697,46 +652,7 @@ namespace Octopus.Tentacle.Tests.Client
 
             started.Elapsed.Should().BeCloseTo(TimeSpan.FromSeconds(expectedDurationAbout), TimeSpan.FromSeconds(10));
         }
-
-        [Ignore("SAST: Currently not supported. If we need support we can revisit")]
-        [Test]
-        public async Task CanCancelRetriesEvenIfActionIgnoresCancellation()
-        {
-            var callCount = 0;
-            var handler = new RpcCallRetryHandler(TimeSpan.FromSeconds(60));
-            var stopWatch = new Stopwatch();
-
-            try
-            {
-                await handler.ExecuteWithRetries(
-                    async ct =>
-                    {
-                        if (!stopWatch.IsRunning)
-                        {
-                            stopWatch.Start();
-                        }
-                        var wontCancelCancellationToken = new CancellationTokenSource().Token;
-
-                        callCount++;
-                        await Task.Delay(TimeSpan.FromSeconds(60), wontCancelCancellationToken);
-
-                        return Guid.NewGuid();
-                    },
-                    onRetryAction: null,
-                    onTimeoutAction: async (_, _, _, _) =>
-                    {
-                        await Task.CompletedTask;
-                        stopWatch.Stop();
-                    },
-                    CancellationToken.None);
-            }
-            catch (OperationCanceledException) { }
-            catch (TimeoutRejectedException) { }
-
-            stopWatch.Elapsed.Should().BeGreaterOrEqualTo(TimeSpan.FromSeconds(4)).And.BeLessThan(TimeSpan.FromSeconds(10));
-            callCount.Should().Be(1);
-        }
-
+        
         [Test]
         public async Task ShouldNotTimeoutTheInitialRequest()
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Halibut;
@@ -91,14 +92,15 @@ namespace Octopus.Tentacle.Client.Scripts
                     clientOperationMetricsBuilder,
                     scriptExecutionCancellationToken);
             }
-            catch (Exception e) when (e is OperationCanceledException && scriptExecutionCancellationToken.IsCancellationRequested)
+            catch (Exception e) when (
+                (e is OperationCanceledException || IsHalibutWrappedOperationCancelledException(e as HalibutClientException)) && 
+                scriptExecutionCancellationToken.IsCancellationRequested)
             {
-                // If we are not retrying and we managed to cancel execution it means the request was never sent so we can safely walk away from it.
-                // TODO - we need a way of knowing the stage of the RPC call (connecting, in-flight) so we behave correctly here
-                //if (e is not OperationAbandonedException && startScriptCallCount <= 1)
-                //{
-                //    throw;
-                //}
+                // If we are not retrying and we managed to cancel execution while connecting it means the request was never sent so we can safely walk away from it.                
+                if (!IsHalibutWrappedOperationCancelledException(e as HalibutClientException) && startScriptCallCount <= 1)
+                {
+                    throw;
+                }
 
                 // Otherwise we have to assume the script started executing and call CancelScript and CompleteScript
                 // We don't have a response so we need to create one to continue the execution flow
@@ -116,6 +118,23 @@ namespace Octopus.Tentacle.Client.Scripts
             }
 
             return scriptStatusResponse;
+        }
+
+        static readonly Regex OperationCancelledRegex = new("The [a-zA-Z]* operation was cancelled", RegexOptions.Compiled);
+
+        static bool IsHalibutWrappedOperationCancelledException(HalibutClientException? ex)
+        {
+            if (ex is null)
+            {
+                return false;
+            }
+
+            if (OperationCancelledRegex.IsMatch(ex.Message))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         protected override async Task<ScriptStatusResponseV2> GetStatus(ScriptStatusResponseV2 lastStatusResponse, CancellationToken scriptExecutionCancellationToken)
